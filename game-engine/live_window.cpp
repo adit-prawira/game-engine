@@ -3,7 +3,7 @@
 namespace live {
 
 LiveWindow::LiveWindow(int w, int h, std::string name): width{w}, height{h}, windowName{name} {
-    initWindow();
+    this->initWindow();
 };
 
 // Destroy window  upon class initialization (Constructor)
