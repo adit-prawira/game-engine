@@ -1,14 +1,18 @@
-//
-//  main.cpp
-//  game-engine
-//
-//  Created by Aditya Prawira on 19/5/2025.
-//
+#include "app.hpp"
 
+// std
 #include <iostream>
+#include <cstdlib>
+#include <stdexcept>
 
-int main(int argc, const char * argv[]) {
-    // insert code here...
-    std::cout << "Hello, World!\n";
-    return 0;
+int main(){
+    live::App app{};
+    try {
+        app.run();
+    }catch(const std::exception &e){
+        // only console log error if any
+        std::cerr << e.what() << '\n';
+        return EXIT_FAILURE;
+    }
+    return EXIT_SUCCESS;
 }

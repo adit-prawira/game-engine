@@ -6,20 +6,35 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		69BDFE412DDB52EF004A281F /* libglfw.3.4.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 69BDFE402DDB52EF004A281F /* libglfw.3.4.dylib */; };
+		69BDFE442DDB52FD004A281F /* libvulkan.1.4.313.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 69BDFE422DDB52FD004A281F /* libvulkan.1.4.313.dylib */; };
+		69BDFE452DDB52FD004A281F /* libvulkan.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 69BDFE432DDB52FD004A281F /* libvulkan.1.dylib */; };
+		69BDFE462DDB5304004A281F /* libvulkan.1.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 69BDFE432DDB52FD004A281F /* libvulkan.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		69BDFE472DDB5304004A281F /* libvulkan.1.4.313.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 69BDFE422DDB52FD004A281F /* libvulkan.1.4.313.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		69BDFE482DDB5304004A281F /* libglfw.3.4.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = 69BDFE402DDB52EF004A281F /* libglfw.3.4.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+/* End PBXBuildFile section */
+
 /* Begin PBXCopyFilesBuildPhase section */
 		69BDFE1B2DDB4856004A281F /* CopyFiles */ = {
 			isa = PBXCopyFilesBuildPhase;
-			buildActionMask = 2147483647;
-			dstPath = /usr/share/man/man1/;
-			dstSubfolderSpec = 0;
+			buildActionMask = 12;
+			dstPath = "";
+			dstSubfolderSpec = 10;
 			files = (
+				69BDFE462DDB5304004A281F /* libvulkan.1.dylib in CopyFiles */,
+				69BDFE472DDB5304004A281F /* libvulkan.1.4.313.dylib in CopyFiles */,
+				69BDFE482DDB5304004A281F /* libglfw.3.4.dylib in CopyFiles */,
 			);
-			runOnlyForDeploymentPostprocessing = 1;
+			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		69BDFE1D2DDB4856004A281F /* game-engine */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = "game-engine"; sourceTree = BUILT_PRODUCTS_DIR; };
+		69BDFE402DDB52EF004A281F /* libglfw.3.4.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libglfw.3.4.dylib; path = ../../../../../opt/homebrew/Cellar/glfw/3.4/lib/libglfw.3.4.dylib; sourceTree = "<group>"; };
+		69BDFE422DDB52FD004A281F /* libvulkan.1.4.313.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.4.313.dylib; path = ../../../../../Applications/VulkanSDK/1.4.313.0/macOS/lib/libvulkan.1.4.313.dylib; sourceTree = "<group>"; };
+		69BDFE432DDB52FD004A281F /* libvulkan.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libvulkan.1.dylib; path = ../../../../../Applications/VulkanSDK/1.4.313.0/macOS/lib/libvulkan.1.dylib; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedRootGroup section */
@@ -35,6 +50,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				69BDFE412DDB52EF004A281F /* libglfw.3.4.dylib in Frameworks */,
+				69BDFE442DDB52FD004A281F /* libvulkan.1.4.313.dylib in Frameworks */,
+				69BDFE452DDB52FD004A281F /* libvulkan.1.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -45,6 +63,7 @@
 			isa = PBXGroup;
 			children = (
 				69BDFE1F2DDB4856004A281F /* game-engine */,
+				69BDFE272DDB4A55004A281F /* Frameworks */,
 				69BDFE1E2DDB4856004A281F /* Products */,
 			);
 			sourceTree = "<group>";
@@ -55,6 +74,16 @@
 				69BDFE1D2DDB4856004A281F /* game-engine */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		69BDFE272DDB4A55004A281F /* Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				69BDFE432DDB52FD004A281F /* libvulkan.1.dylib */,
+				69BDFE422DDB52FD004A281F /* libvulkan.1.4.313.dylib */,
+				69BDFE402DDB52EF004A281F /* libglfw.3.4.dylib */,
+			);
+			name = Frameworks;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -245,6 +274,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				HEADER_SEARCH_PATHS = (
+					/opt/homebrew/Cellar/glfw/3.4/include,
+					/Applications/VulkanSDK/1.4.313.0/macOS/include,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/opt/homebrew/Cellar/glfw/3.4/lib,
+					/Applications/VulkanSDK/1.4.313.0/macOS/lib,
+				);
+				NEW_SETTING = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -253,6 +291,15 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				HEADER_SEARCH_PATHS = (
+					/opt/homebrew/Cellar/glfw/3.4/include,
+					/Applications/VulkanSDK/1.4.313.0/macOS/include,
+				);
+				LIBRARY_SEARCH_PATHS = (
+					/opt/homebrew/Cellar/glfw/3.4/lib,
+					/Applications/VulkanSDK/1.4.313.0/macOS/lib,
+				);
+				NEW_SETTING = "";
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
