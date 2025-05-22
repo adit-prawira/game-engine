@@ -26,5 +26,7 @@ public:
     bool shouldClose(){
         return glfwWindowShouldClose(window);
     }
+    
+    void createWindowSurface(VkInstance instance, VkSurfaceKHR* surface);
 };
 }

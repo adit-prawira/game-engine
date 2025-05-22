@@ -1,4 +1,5 @@
 #include "live_window.hpp"
+#include <stdexcept>
 
 namespace live {
 
@@ -25,5 +26,10 @@ void LiveWindow::initWindow(){
     
     window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
 };
+
+void LiveWindow::createWindowSurface(VkInstance instance, VkSurfaceKHR *surface){
+    bool isSuccess = glfwCreateWindowSurface(instance, this->window, nullptr, surface) == VK_SUCCESS;
+    if(!isSuccess) throw std::runtime_error("Unable to create window surface");
+}
 
 }
