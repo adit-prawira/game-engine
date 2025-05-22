@@ -1,1 +1,5 @@
 .env
+.idea
+**/a.out
+**/c_cpp_properties.json
+
