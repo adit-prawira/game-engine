@@ -95,7 +95,12 @@ namespace live {
             VkPhysicalDeviceFeatures buildDeviceFeatures();
             VkDeviceCreateInfo buildBaseDeviceCreateInfo(uint32_t queueCreateInfoCount, const VkDeviceQueueCreateInfo* pQueueCreateInfos, const VkPhysicalDeviceFeatures* enabledFeatures, uint32_t enabledExtensionCount, const char* const* ppEnabledExtensionNames);
             VkCommandPoolCreateInfo buildCommandPoolCreateInfo(uint32_t queueFamilyIndex);
-        
+            VkBufferCreateInfo buildBufferCreateInfo(VkDeviceSize size, VkBufferUsageFlags usage);
+            VkMemoryAllocateInfo buildMemoryAllocateInfo(VkDeviceSize size, uint32_t memoryTypeIndex);
+            VkCommandBufferAllocateInfo buildCommandBufferAllocateInfo(VkCommandPool commandPool, uint32_t commandBufferCount);
+            VkCommandBufferBeginInfo buildCommandBufferBeginInfo();
+            VkSubmitInfo buildSubmitInfo(uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffer);
+            
             // utility functions
             bool isDeviceSuitable(VkPhysicalDevice device);
             std::vector<const char *> getRequiredExtensions();
@@ -117,7 +122,7 @@ namespace live {
             VkQueue graphicsQueue_;
             VkQueue presentQueue_;
 
-            const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_VALIDATION"};
+            const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
             const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
     };
 }

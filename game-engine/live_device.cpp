@@ -7,7 +7,7 @@
 #include <set>
 
 namespace live {
-// Utilities
+    // Utilities
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData){
         std::cerr << "Validation layer: " << pCallbackData->pMessage << std::endl;
         return VK_FALSE;
@@ -25,7 +25,7 @@ namespace live {
         func(instance, debugMessenger, pAllocator);
     }
 
-    // Publices
+    // Publics
     LiveDevice::LiveDevice(LiveWindow &window): window{window}{
         this->createInstance();
         this->setupDebugMessenger();
@@ -71,13 +71,104 @@ namespace live {
         }
         throw std::runtime_error("Failed to find supported format!");
     }
+    
+    void LiveDevice::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory){
+        VkBufferCreateInfo bufferInfo = this->buildBufferCreateInfo(size, usage);
+        bool isCreateBufferSuccess = vkCreateBuffer(this->device_, &bufferInfo, nullptr, &buffer) == VK_SUCCESS;
+        if(!isCreateBufferSuccess) throw std::runtime_error("Failed to create buffer!");
+
+        VkMemoryRequirements memoryRequirements;
+        vkGetBufferMemoryRequirements(this->device_, buffer, &memoryRequirements);
+        VkMemoryAllocateInfo memoryAllocateInfo = this->buildMemoryAllocateInfo(
+            memoryRequirements.size, 
+            this->findMemoryType(memoryRequirements.memoryTypeBits, properties)
+        );
+        bool isCreateMemoryAllocateSuccess = vkAllocateMemory(this->device_, &memoryAllocateInfo, nullptr, &bufferMemory) == VK_SUCCESS;
+        if(!isCreateMemoryAllocateSuccess) throw std::runtime_error("Failed to allocate memory!");
+        
+        vkBindBufferMemory(this->device_, buffer, bufferMemory, 0);
+    }
+
+    VkCommandBuffer LiveDevice::beginSingleTimeCommands(){
+        VkCommandBufferAllocateInfo commandBufferAllocateInfo = this->buildCommandBufferAllocateInfo(this->commandPool, 1);
+        VkCommandBuffer commandBuffer;
+        vkAllocateCommandBuffers(this->device_, &commandBufferAllocateInfo, &commandBuffer);
+
+        VkCommandBufferBeginInfo commandBufferBeginInfo = this->buildCommandBufferBeginInfo();
+        vkBeginCommandBuffer(commandBuffer, &commandBufferBeginInfo);
+
+        return commandBuffer;
+    }
+
+    void LiveDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer){
+        vkEndCommandBuffer(commandBuffer);
+        VkSubmitInfo submitInfo = this->buildSubmitInfo(1, &commandBuffer);
+        vkQueueSubmit(this->graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
+        vkQueueWaitIdle(this->graphicsQueue_);
+
+        vkFreeCommandBuffers(this->device_, this->commandPool, 1, &commandBuffer);
+    }
+
+    void LiveDevice::copyBuffer(VkBuffer sourceBuffer, VkBuffer destinationBuffer, VkDeviceSize size){
+        VkCommandBuffer commandBuffer =this->beginSingleTimeCommands();
+        VkBufferCopy bufferCopyRegions = {};
+        bufferCopyRegions.srcOffset = 0;
+        bufferCopyRegions.dstOffset = 0;
+        bufferCopyRegions.size = size;
+
+        vkCmdCopyBuffer(commandBuffer, sourceBuffer, destinationBuffer, 1, &bufferCopyRegions);
+        this->endSingleTimeCommands(commandBuffer);
+    }
+
+    void LiveDevice::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount){
+        VkCommandBuffer commandBuffer = this->beginSingleTimeCommands();
+        VkBufferImageCopy bufferImageCopyRegions = {};
+        bufferImageCopyRegions.bufferOffset = 0;
+        bufferImageCopyRegions.bufferRowLength = 0;
+        bufferImageCopyRegions.bufferImageHeight = 0;
+
+        bufferImageCopyRegions.imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT;
+        bufferImageCopyRegions.imageSubresource.mipLevel = 0;
+        bufferImageCopyRegions.imageSubresource.baseArrayLayer = 0;
+        bufferImageCopyRegions.imageSubresource.layerCount = layerCount;
+
+        bufferImageCopyRegions.imageOffset = {0,0,0};
+        bufferImageCopyRegions.imageExtent={width, height, 1};
+
+        vkCmdCopyBufferToImage(commandBuffer, buffer, image, VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL, 1, &bufferImageCopyRegions);
+        this->endSingleTimeCommands(commandBuffer);
+    }
+
+    void LiveDevice::createImageWithInfo(const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory){
+        bool isCreateImageSuccess = vkCreateImage(this->device_, &imageInfo, nullptr, &image) == VK_SUCCESS;
+        if(!isCreateImageSuccess) throw std::runtime_error("Failed to create image!");
+
+        VkMemoryRequirements memoryRequirements;
+        vkGetImageMemoryRequirements(this->device_, image, &memoryRequirements);
+
+        VkMemoryAllocateInfo memoryAllocateInfo = this->buildMemoryAllocateInfo(
+            memoryRequirements.size,
+            this->findMemoryType(memoryRequirements.memoryTypeBits, properties)
+        );
+
+        bool isAllocateMemorySuccess = vkAllocateMemory(this->device_, &memoryAllocateInfo, nullptr, &imageMemory) == VK_SUCCESS;
+        if(!isAllocateMemorySuccess) throw std::runtime_error("Failed to allocate memory!");
+        
+        bool isBindImageMemorySuccess = vkBindImageMemory(this->device_, image, imageMemory,0) == VK_SUCCESS;
+        if(!isBindImageMemorySuccess) throw std::runtime_error("Failed to bind image memory!");
+    }
 
     // Privates
     void LiveDevice::createInstance(){
         if(this->enableValidationLayers && !this->checkValidationLayerSupport()) throw std::runtime_error("Validation layers requested, but not available");
+
         VkApplicationInfo applicationInfo = this->buildApplicationInfo();
         VkInstanceCreateInfo instanceCreateInfo = this->buildInstanceCreateInfo(&applicationInfo);
-        if(vkCreateInstance(&instanceCreateInfo, nullptr, &this->instance)) throw std::runtime_error("Failed to create instance");
+
+        bool isCreateInstanceSuccess = vkCreateInstance(&instanceCreateInfo, nullptr, &instance) == VK_SUCCESS;
+
+        if(!isCreateInstanceSuccess) throw std::runtime_error("Failed to create instance");
+        std::cout << "Creating instance successful" << std::endl;
         this->validateGLfwRequiredInstanceExtensions();
     }
 
@@ -142,6 +233,46 @@ namespace live {
         VkCommandPoolCreateInfo poolInfo = this->buildCommandPoolCreateInfo(queueFamilyIndices.graphicsFamily);
         bool isCreateCommandPoolSuccess = vkCreateCommandPool(this->device_, &poolInfo, nullptr, &this->commandPool);
         if(!isCreateCommandPoolSuccess) throw std::runtime_error("Failed to create command pool!");
+    }
+
+    VkSubmitInfo LiveDevice::buildSubmitInfo(uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffer){
+        VkSubmitInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+        info.commandBufferCount = commandBufferCount;
+        info.pCommandBuffers = pCommandBuffer;
+        return info;
+    }
+
+    VkCommandBufferBeginInfo LiveDevice::buildCommandBufferBeginInfo(){
+        VkCommandBufferBeginInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
+        info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
+        return info;
+    }
+    VkCommandBufferAllocateInfo LiveDevice::buildCommandBufferAllocateInfo(VkCommandPool commandPool, uint32_t commandBufferCount){
+        VkCommandBufferAllocateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
+        info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
+        info.commandPool = commandPool;
+        info.commandBufferCount = commandBufferCount;
+        return info;
+    }
+    VkMemoryAllocateInfo LiveDevice::buildMemoryAllocateInfo(VkDeviceSize size, uint32_t memoryTypeIndex){
+        VkMemoryAllocateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
+        info.allocationSize = size;
+        info.memoryTypeIndex  = memoryTypeIndex;
+        return info;
+    }
+
+
+    VkBufferCreateInfo LiveDevice::buildBufferCreateInfo(VkDeviceSize size, VkBufferUsageFlags usage){
+        VkBufferCreateInfo info = {};
+        info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
+        info.size = size;
+        info.usage = usage;
+        info.sharingMode = VK_SHARING_MODE_EXCLUSIVE;
+        return info;
     }
 
     VkCommandPoolCreateInfo LiveDevice::buildCommandPoolCreateInfo(uint32_t queueFamilyIndex){
@@ -342,6 +473,7 @@ namespace live {
         for(const char* validationLayer:this->validationLayers){
             bool isLayerFound = false;
             for(const VkLayerProperties &availableLayer:availableLayers){
+                std::cout << validationLayer << " " << availableLayer.layerName << std::endl;
                 if(strcmp(validationLayer, availableLayer.layerName)==0){
                     isLayerFound = true;
                     break;
