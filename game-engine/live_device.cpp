@@ -162,10 +162,27 @@ namespace live {
     void LiveDevice::createInstance(){
         if(this->enableValidationLayers && !this->checkValidationLayerSupport()) throw std::runtime_error("Validation layers requested, but not available");
 
-        VkApplicationInfo applicationInfo = this->buildApplicationInfo();
-        VkInstanceCreateInfo instanceCreateInfo = this->buildInstanceCreateInfo(&applicationInfo);
+        VkApplicationInfo appInfo = this->buildApplicationInfo();
+        VkInstanceCreateInfo createInfo = this->buildInstanceCreateInfo(&appInfo);
 
-        bool isCreateInstanceSuccess = vkCreateInstance(&instanceCreateInfo, nullptr, &instance) == VK_SUCCESS;
+        std::vector<const char *> extensions = this->getRequiredExtensions();
+        createInfo.enabledExtensionCount = static_cast<uint32_t>(extensions.size());
+        createInfo.ppEnabledExtensionNames = extensions.data();
+
+        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
+        if (enableValidationLayers) {
+            createInfo.enabledLayerCount = static_cast<uint32_t>(validationLayers.size());
+            createInfo.ppEnabledLayerNames = validationLayers.data();
+        
+            this->populateDebugMessengerCreateInfo(debugCreateInfo);
+            createInfo.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
+        } else {
+            createInfo.enabledLayerCount = 0;
+            createInfo.pNext = nullptr;
+        }
+
+
+        bool isCreateInstanceSuccess = vkCreateInstance(&createInfo, nullptr, &this->instance) == VK_SUCCESS;
 
         if(!isCreateInstanceSuccess) throw std::runtime_error("Failed to create instance");
         std::cout << "Creating instance successful" << std::endl;
@@ -212,8 +229,8 @@ namespace live {
             queueCreateInfos.push_back(this->buildQueueCreateInfo(queueFamily, &queuePriority));
         }
         VkPhysicalDeviceFeatures deviceFeatures = this->buildDeviceFeatures();
+
         VkDeviceCreateInfo createInfo = this->buildBaseDeviceCreateInfo(static_cast<uint32_t>(queueCreateInfos.size()), queueCreateInfos.data(), &deviceFeatures, static_cast<uint32_t>(this->deviceExtensions.size()), this->deviceExtensions.data());
-        
         if(this->enableValidationLayers){
             createInfo.enabledLayerCount = static_cast<uint32_t>(this->validationLayers.size());
             createInfo.ppEnabledLayerNames = this->validationLayers.data();
@@ -231,7 +248,7 @@ namespace live {
     void LiveDevice::createCommandPool(){
         QueueFamilyIndices queueFamilyIndices = this->findPhysicalQueueFamilies();
         VkCommandPoolCreateInfo poolInfo = this->buildCommandPoolCreateInfo(queueFamilyIndices.graphicsFamily);
-        bool isCreateCommandPoolSuccess = vkCreateCommandPool(this->device_, &poolInfo, nullptr, &this->commandPool);
+        bool isCreateCommandPoolSuccess = vkCreateCommandPool(this->device_, &poolInfo, nullptr, &this->commandPool) == VK_SUCCESS;
         if(!isCreateCommandPoolSuccess) throw std::runtime_error("Failed to create command pool!");
     }
 
@@ -323,27 +340,15 @@ namespace live {
     }
 
     VkInstanceCreateInfo LiveDevice::buildInstanceCreateInfo(const VkApplicationInfo* appInfo){
-        auto extension = this->getRequiredExtensions();
-        VkInstanceCreateInfo info = {};
-        info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
-        info.pApplicationInfo = appInfo;
-        info.enabledExtensionCount = static_cast<uint32_t>(extension.size());
-        info.ppEnabledExtensionNames = extension.data();
-        
-        VkDebugUtilsMessengerCreateInfoEXT debugCreateInfo;
-        if(this->enableValidationLayers){
-            info.enabledLayerCount = static_cast<uint32_t>(this->validationLayers.size());
-            info.ppEnabledLayerNames = this->validationLayers.data();
-            this->populateDebugMessengerCreateInfo(debugCreateInfo);
-            info.pNext = (VkDebugUtilsMessengerCreateInfoEXT *)&debugCreateInfo;
-        }else {
-            info.enabledLayerCount =0;
-            info.pNext = nullptr;
-        }
-        return info;
+        VkInstanceCreateInfo createInfo = {};
+        createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
+        createInfo.pApplicationInfo = appInfo;
+        createInfo.flags = VK_INSTANCE_CREATE_ENUMERATE_PORTABILITY_BIT_KHR;
+        return createInfo;
     }
-
+                                                
     bool LiveDevice::isDeviceSuitable(VkPhysicalDevice device){
+        std::cout << "Attempting to check if device is suitable" << std::endl;
         QueueFamilyIndices indices = this->findQueueFamilies(device);
         bool isExtensionSupported = this->checkDeviceExtensionSupport(device);
         bool isSwapChainAdequate = false;
@@ -353,18 +358,26 @@ namespace live {
         }
         VkPhysicalDeviceFeatures supportedFeatures;
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
-        return indices.isComplete() && isExtensionSupported && isSwapChainAdequate && supportedFeatures.samplerAnisotropy;
+        std::cout << "\tIndices Completed -> " << indices.isComplete() << std::endl;
+        std::cout << "\tExtension is supported -> " << isExtensionSupported << std::endl;
+        std::cout << "\tSwap chain is adequate -> " << isSwapChainAdequate << std::endl;
+        std::cout << "\tSampler Anisotropy -> " << supportedFeatures.samplerAnisotropy << std::endl;
+        bool isSuitable = indices.isComplete() && isExtensionSupported && isSwapChainAdequate && supportedFeatures.samplerAnisotropy;
+        std::cout << "Is Device Suitable -> " << isSuitable << std::endl;
+        return isSuitable;
     }
 
     QueueFamilyIndices LiveDevice::findQueueFamilies(VkPhysicalDevice device){
         QueueFamilyIndices indices;
-        uint32_t queuFamilyCount = 0;
-        vkGetPhysicalDeviceQueueFamilyProperties(device, &queuFamilyCount, nullptr);
-        std::vector<VkQueueFamilyProperties> queueFamilies(queuFamilyCount);
+        uint32_t queueFamilyCount = 0;
         
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, nullptr);
+        std::vector<VkQueueFamilyProperties> queueFamilies(queueFamilyCount);
+        vkGetPhysicalDeviceQueueFamilyProperties(device, &queueFamilyCount, queueFamilies.data());
+
         int i = 0;
         
-        for(const VkQueueFamilyProperties queueFamily:queueFamilies){
+        for(const auto &queueFamily : queueFamilies){
             if(queueFamily.queueCount > 0 && queueFamily.queueFlags & VK_QUEUE_GRAPHICS_BIT){
                 indices.graphicsFamily = i;
                 indices.graphicFamilyHasValue = true;
@@ -383,6 +396,7 @@ namespace live {
         return indices;
     }
 
+
     bool LiveDevice::checkDeviceExtensionSupport(VkPhysicalDevice device){
         uint32_t extensionCount = 0;
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
@@ -391,7 +405,7 @@ namespace live {
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, availableExtensions.data());
         std::set<std::string> requiredExtension(this->deviceExtensions.begin(), this->deviceExtensions.end());
         for(const VkExtensionProperties &extension:availableExtensions){
-            requiredExtension.insert(extension.extensionName);
+            requiredExtension.erase(extension.extensionName);
         }
         return requiredExtension.empty();
     }
@@ -461,7 +475,11 @@ namespace live {
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionsCount);
         // specify extensions into the vector
         std::vector<const char *> extensions(glfwExtensions, glfwExtensions + glfwExtensionsCount);
-        if(this->enableValidationLayers) extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+        if(this->enableValidationLayers) {
+            extensions.push_back(VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+            extensions.push_back("VK_KHR_portability_enumeration");
+            extensions.push_back("VK_KHR_get_physical_device_properties2");
+        }
         return extensions;
     }
 
@@ -473,7 +491,6 @@ namespace live {
         for(const char* validationLayer:this->validationLayers){
             bool isLayerFound = false;
             for(const VkLayerProperties &availableLayer:availableLayers){
-                std::cout << validationLayer << " " << availableLayer.layerName << std::endl;
                 if(strcmp(validationLayer, availableLayer.layerName)==0){
                     isLayerFound = true;
                     break;

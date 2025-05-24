@@ -61,11 +61,11 @@ namespace live {
             }
             
             SwapChainSupportDetails getSwapChainSupportDetails(){
-                return this->querySwapChainSupport(physicalDevice);
+                return this->querySwapChainSupport(this->physicalDevice);
             }
 
             QueueFamilyIndices findPhysicalQueueFamilies(){
-                return this->findQueueFamilies(physicalDevice);
+                return this->findQueueFamilies(this->physicalDevice);
             }
 
             uint32_t findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties);
@@ -123,6 +123,6 @@ namespace live {
             VkQueue presentQueue_;
 
             const std::vector<const char *> validationLayers = {"VK_LAYER_KHRONOS_validation"};
-            const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME};
+            const std::vector<const char *> deviceExtensions = {VK_KHR_SWAPCHAIN_EXTENSION_NAME, "VK_KHR_portability_subset"};
     };
 }
