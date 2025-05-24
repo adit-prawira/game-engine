@@ -4,8 +4,8 @@
 #include <GLFW/glfw3.h>
 #include <string>
 
-namespace live {
-    class LiveWindow {
+namespace engine {
+    class EngineWindow {
 
         private:
             GLFWwindow *window;
@@ -16,12 +16,12 @@ namespace live {
             std::string windowName;
             
         public:
-            LiveWindow(int w, int h, std::string name);
-            ~LiveWindow();
+            EngineWindow(int w, int h, std::string name);
+            ~EngineWindow();
             
             //    Destructor
-            LiveWindow(const LiveWindow &) = delete;
-            LiveWindow &operator = (const LiveWindow &) = delete;
+            EngineWindow(const EngineWindow &) = delete;
+            EngineWindow &operator = (const EngineWindow &) = delete;
             
             bool shouldClose(){
                 return glfwWindowShouldClose(window);

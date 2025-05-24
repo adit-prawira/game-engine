@@ -1,19 +1,19 @@
-#include "live_window.hpp"
+#include "engine_window.hpp"
 #include <stdexcept>
 
-namespace live {
+namespace engine {
 
-    LiveWindow::LiveWindow(int w, int h, std::string name): width{w}, height{h}, windowName{name} {
+    EngineWindow::EngineWindow(int w, int h, std::string name): width{w}, height{h}, windowName{name} {
         this->initWindow();
     };
 
     // Destroy window  upon class initialization (Constructor)
-    LiveWindow::~LiveWindow(){
+    EngineWindow::~EngineWindow(){
         glfwDestroyWindow(window);
         glfwTerminate();
     };
 
-    void LiveWindow::initWindow(){
+    void EngineWindow::initWindow(){
         
         // initialize library
         glfwInit();
@@ -27,7 +27,7 @@ namespace live {
         window = glfwCreateWindow(width, height, windowName.c_str(), nullptr, nullptr);
     };
 
-    void LiveWindow::createWindowSurface(VkInstance instance, VkSurfaceKHR *surface){
+    void EngineWindow::createWindowSurface(VkInstance instance, VkSurfaceKHR *surface){
         bool isSuccess = glfwCreateWindowSurface(instance, this->window, nullptr, surface) == VK_SUCCESS;
         if(!isSuccess) throw std::runtime_error("Unable to create window surface");
     }

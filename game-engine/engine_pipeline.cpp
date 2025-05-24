@@ -1,4 +1,4 @@
-#include "live_pipeline.hpp"
+#include "engine_pipeline.hpp"
 
 // std
 #include <fstream>
@@ -7,19 +7,19 @@
 #include <filesystem>
 #include <cassert>
 
-namespace live {
+namespace engine {
     // Publics
-    LivePipeline::LivePipeline(LiveDevice &device, const std::string& vertexFilePath, const std::string& fragmentFilePath, const PipelineConfigInfo& configInfo): liveDevice{device} {
+    EnginePipeline::EnginePipeline(EngineDevice &device, const std::string& vertexFilePath, const std::string& fragmentFilePath, const PipelineConfigInfo& configInfo): engineDevice{device} {
         this->createGraphicsPipeline(vertexFilePath, fragmentFilePath, configInfo);
     }
 
-    LivePipeline::~LivePipeline(){
-        vkDestroyShaderModule(this->liveDevice.device(), this->vertexShaderModule, nullptr);
-        vkDestroyShaderModule(this->liveDevice.device(), this->fragmentShadeModule, nullptr);
-        vkDestroyPipeline(this->liveDevice.device(), this->graphicsPipeline, nullptr);
+    EnginePipeline::~EnginePipeline(){
+        vkDestroyShaderModule(this->engineDevice.device(), this->vertexShaderModule, nullptr);
+        vkDestroyShaderModule(this->engineDevice.device(), this->fragmentShadeModule, nullptr);
+        vkDestroyPipeline(this->engineDevice.device(), this->graphicsPipeline, nullptr);
     }
 
-    PipelineConfigInfo LivePipeline::defaultPipelineConfig(uint32_t width, uint32_t height){
+    PipelineConfigInfo EnginePipeline::defaultPipelineConfig(uint32_t width, uint32_t height){
         PipelineConfigInfo pipelineConfigInfo = {};
         pipelineConfigInfo.pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
         pipelineConfigInfo.pipelineInputAssemblyStateCreateInfo.flags = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
@@ -92,7 +92,7 @@ namespace live {
     }
 
     // Privates
-    std::vector<char> LivePipeline::readFile(const std::string& filePath){
+    std::vector<char> EnginePipeline::readFile(const std::string& filePath){
         
         // read file, and when open seeked the end immediately and read it as binary
         
@@ -119,7 +119,7 @@ namespace live {
         return buffer;
     }
 
-    void LivePipeline::createGraphicsPipeline(const std::string &vertexFilePath, const std::string &fragmentFilePath, const PipelineConfigInfo& configInfo){
+    void EnginePipeline::createGraphicsPipeline(const std::string &vertexFilePath, const std::string &fragmentFilePath, const PipelineConfigInfo& configInfo){
         assert(configInfo.pipelineLayout != VK_NULL_HANDLE && "Cannot create graphics pipeline:: no pipelineLayout provided in configInfo");
         assert(configInfo.renderPass != VK_NULL_HANDLE && "Cannot create graphics pipeline:: no renderPass provided in configInfo");
 
@@ -174,17 +174,17 @@ namespace live {
         graphicsPipelineCreateInfo.basePipelineIndex = -1;
         graphicsPipelineCreateInfo.basePipelineHandle = VK_NULL_HANDLE;
 
-        bool isCreatGraphicsPipelineSuccessful = vkCreateGraphicsPipelines(this->liveDevice.device(), VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &this->graphicsPipeline) == VK_SUCCESS;
+        bool isCreatGraphicsPipelineSuccessful = vkCreateGraphicsPipelines(this->engineDevice.device(), VK_NULL_HANDLE, 1, &graphicsPipelineCreateInfo, nullptr, &this->graphicsPipeline) == VK_SUCCESS;
         if(!isCreatGraphicsPipelineSuccessful) throw std::runtime_error("Failed to create graphics pipeline!");
     }
 
-    void LivePipeline::createShaderModule(const std::vector<char>& codes, VkShaderModule* shaderModule){
+    void EnginePipeline::createShaderModule(const std::vector<char>& codes, VkShaderModule* shaderModule){
         VkShaderModuleCreateInfo shaderModuleCreateInfo = {};
         shaderModuleCreateInfo.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
         shaderModuleCreateInfo.codeSize = codes.size();
         shaderModuleCreateInfo.pCode = reinterpret_cast<const uint32_t*>(codes.data());
 
-        bool isCreateShaderModuleSuccess = vkCreateShaderModule(this->liveDevice.device(), &shaderModuleCreateInfo, nullptr, shaderModule) == VK_SUCCESS;
+        bool isCreateShaderModuleSuccess = vkCreateShaderModule(this->engineDevice.device(), &shaderModuleCreateInfo, nullptr, shaderModule) == VK_SUCCESS;
         if(!isCreateShaderModuleSuccess) throw std::runtime_error("Failed to create shader module!");
     }
 

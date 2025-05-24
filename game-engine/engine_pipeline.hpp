@@ -1,11 +1,11 @@
 #pragma once
-#include "live_device.hpp"
+#include "engine_device.hpp"
 
 // std
 #include <string>
 #include <vector>
 
-namespace live {
+namespace engine {
     struct PipelineConfigInfo {
         VkViewport viewPort;
         VkRect2D scissor;
@@ -21,13 +21,13 @@ namespace live {
         uint32_t subpass = 0;
     };
 
-    class LivePipeline {
+    class EnginePipeline {
         public:
-            LivePipeline(LiveDevice &device,  const std::string& vertexFilePath, const std::string& fragmentFilePath, const PipelineConfigInfo& configInfo);
-            ~LivePipeline();
-            
-            LivePipeline(const LivePipeline&) = delete;
-            void operator = (const LivePipeline&) = delete; 
+            EnginePipeline(EngineDevice &device,  const std::string& vertexFilePath, const std::string& fragmentFilePath, const PipelineConfigInfo& configInfo);
+            ~EnginePipeline();
+
+            EnginePipeline(const EnginePipeline&) = delete;
+            void operator = (const EnginePipeline&) = delete; 
             static PipelineConfigInfo defaultPipelineConfig(uint32_t width, uint32_t height);
         private:
             static std::vector<char> readFile(const std::string& filePath);
@@ -37,7 +37,7 @@ namespace live {
             void createShaderModule(const std::vector<char>& codes, VkShaderModule* shaderModule);
 
             // Pipeline need device to exist, but this is an aggregation where it can exist independently from the parent
-            LiveDevice& liveDevice;
+            EngineDevice& engineDevice;
             VkPipeline graphicsPipeline;
             VkShaderModule vertexShaderModule;
             VkShaderModule fragmentShadeModule;

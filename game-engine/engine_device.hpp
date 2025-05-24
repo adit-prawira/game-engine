@@ -1,11 +1,11 @@
 #pragma once
-#include "live_window.hpp"
+#include "engine_window.hpp"
 
 //std
 #include <vector>
 #include <string>
 
-namespace live {
+namespace engine {
 
     struct SwapChainSupportDetails{
         VkSurfaceCapabilitiesKHR capabilities;
@@ -23,7 +23,7 @@ namespace live {
         }
     };
 
-    class LiveDevice {
+    class EngineDevice {
         public:
             #ifdef NDEBUG
             const bool enableValidationLayers = false;
@@ -31,16 +31,16 @@ namespace live {
             const bool enableValidationLayers = true;
             #endif
             
-            LiveDevice(LiveWindow &window);
-            ~LiveDevice();
+            EngineDevice(EngineWindow &window);
+            ~EngineDevice();
 
             // not copyable
-            LiveDevice(const LiveDevice &) = delete;
-            LiveDevice &operator = (const LiveDevice &) = delete;
+            EngineDevice(const EngineDevice &) = delete;
+            EngineDevice &operator = (const EngineDevice &) = delete;
             
             // not movable
-            LiveDevice(LiveDevice &&) = delete;
-            LiveDevice &operator = (LiveDevice &&) = delete;
+            EngineDevice(EngineDevice &&) = delete;
+            EngineDevice &operator = (EngineDevice &&) = delete;
 
 
             VkCommandPool getCommandPool(){
@@ -114,7 +114,7 @@ namespace live {
             VkInstance instance;
             VkDebugUtilsMessengerEXT debugMessenger;
             VkPhysicalDevice physicalDevice = VK_NULL_HANDLE;
-            LiveWindow &window;
+            EngineWindow &window;
             VkCommandPool commandPool;
 
             VkDevice device_;

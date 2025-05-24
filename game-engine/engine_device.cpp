@@ -1,4 +1,4 @@
-#include "live_device.hpp"
+#include "engine_device.hpp"
 
 // std
 #include <iostream>
@@ -6,7 +6,7 @@
 #include <unordered_set>
 #include <set>
 
-namespace live {
+namespace engine {
     // Utilities
     static VKAPI_ATTR VkBool32 VKAPI_CALL debugCallback(VkDebugUtilsMessageSeverityFlagBitsEXT messageSeverity, VkDebugUtilsMessageTypeFlagsEXT messageType, const VkDebugUtilsMessengerCallbackDataEXT* pCallbackData, void* pUserData){
         std::cerr << "Validation layer: " << pCallbackData->pMessage << std::endl;
@@ -26,7 +26,7 @@ namespace live {
     }
 
     // Publics
-    LiveDevice::LiveDevice(LiveWindow &window): window{window}{
+    EngineDevice::EngineDevice(EngineWindow &window): window{window}{
         this->createInstance();
         this->setupDebugMessenger();
         this->createSurface();
@@ -35,7 +35,7 @@ namespace live {
         this->createCommandPool();
     }
 
-    LiveDevice::~LiveDevice(){
+    EngineDevice::~EngineDevice(){
         vkDestroyCommandPool(this->device_, this->commandPool, nullptr);
         vkDestroyDevice(this->device_, nullptr);
         if(this->enableValidationLayers){
@@ -45,7 +45,7 @@ namespace live {
         vkDestroyInstance(this->instance, nullptr);
     }
 
-    uint32_t LiveDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties){
+    uint32_t EngineDevice::findMemoryType(uint32_t typeFilter, VkMemoryPropertyFlags properties){
         VkPhysicalDeviceMemoryProperties memoryProperties;
         vkGetPhysicalDeviceMemoryProperties(this->physicalDevice, &memoryProperties);
         for(uint32_t i = 0; i < memoryProperties.memoryTypeCount; i++){
@@ -57,7 +57,7 @@ namespace live {
         throw std::runtime_error("Failed to find suitable memory type");
     }
 
-    VkFormat LiveDevice::findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features){
+    VkFormat EngineDevice::findSupportedFormat(const std::vector<VkFormat> &candidates, VkImageTiling tiling, VkFormatFeatureFlags features){
         for(VkFormat candidate:candidates){
             VkFormatProperties properties;
             vkGetPhysicalDeviceFormatProperties(this->physicalDevice, candidate, &properties);
@@ -72,7 +72,7 @@ namespace live {
         throw std::runtime_error("Failed to find supported format!");
     }
     
-    void LiveDevice::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory){
+    void EngineDevice::createBuffer(VkDeviceSize size, VkBufferUsageFlags usage, VkMemoryPropertyFlags properties, VkBuffer &buffer, VkDeviceMemory &bufferMemory){
         VkBufferCreateInfo bufferInfo = this->buildBufferCreateInfo(size, usage);
         bool isCreateBufferSuccess = vkCreateBuffer(this->device_, &bufferInfo, nullptr, &buffer) == VK_SUCCESS;
         if(!isCreateBufferSuccess) throw std::runtime_error("Failed to create buffer!");
@@ -89,7 +89,7 @@ namespace live {
         vkBindBufferMemory(this->device_, buffer, bufferMemory, 0);
     }
 
-    VkCommandBuffer LiveDevice::beginSingleTimeCommands(){
+    VkCommandBuffer EngineDevice::beginSingleTimeCommands(){
         VkCommandBufferAllocateInfo commandBufferAllocateInfo = this->buildCommandBufferAllocateInfo(this->commandPool, 1);
         VkCommandBuffer commandBuffer;
         vkAllocateCommandBuffers(this->device_, &commandBufferAllocateInfo, &commandBuffer);
@@ -100,7 +100,7 @@ namespace live {
         return commandBuffer;
     }
 
-    void LiveDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer){
+    void EngineDevice::endSingleTimeCommands(VkCommandBuffer commandBuffer){
         vkEndCommandBuffer(commandBuffer);
         VkSubmitInfo submitInfo = this->buildSubmitInfo(1, &commandBuffer);
         vkQueueSubmit(this->graphicsQueue_, 1, &submitInfo, VK_NULL_HANDLE);
@@ -109,7 +109,7 @@ namespace live {
         vkFreeCommandBuffers(this->device_, this->commandPool, 1, &commandBuffer);
     }
 
-    void LiveDevice::copyBuffer(VkBuffer sourceBuffer, VkBuffer destinationBuffer, VkDeviceSize size){
+    void EngineDevice::copyBuffer(VkBuffer sourceBuffer, VkBuffer destinationBuffer, VkDeviceSize size){
         VkCommandBuffer commandBuffer =this->beginSingleTimeCommands();
         VkBufferCopy bufferCopyRegions = {};
         bufferCopyRegions.srcOffset = 0;
@@ -120,7 +120,7 @@ namespace live {
         this->endSingleTimeCommands(commandBuffer);
     }
 
-    void LiveDevice::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount){
+    void EngineDevice::copyBufferToImage(VkBuffer buffer, VkImage image, uint32_t width, uint32_t height, uint32_t layerCount){
         VkCommandBuffer commandBuffer = this->beginSingleTimeCommands();
         VkBufferImageCopy bufferImageCopyRegions = {};
         bufferImageCopyRegions.bufferOffset = 0;
@@ -139,7 +139,7 @@ namespace live {
         this->endSingleTimeCommands(commandBuffer);
     }
 
-    void LiveDevice::createImageWithInfo(const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory){
+    void EngineDevice::createImageWithInfo(const VkImageCreateInfo &imageInfo, VkMemoryPropertyFlags properties, VkImage &image, VkDeviceMemory &imageMemory){
         bool isCreateImageSuccess = vkCreateImage(this->device_, &imageInfo, nullptr, &image) == VK_SUCCESS;
         if(!isCreateImageSuccess) throw std::runtime_error("Failed to create image!");
 
@@ -159,7 +159,7 @@ namespace live {
     }
 
     // Privates
-    void LiveDevice::createInstance(){
+    void EngineDevice::createInstance(){
         if(this->enableValidationLayers && !this->checkValidationLayerSupport()) throw std::runtime_error("Validation layers requested, but not available");
 
         VkApplicationInfo appInfo = this->buildApplicationInfo();
@@ -189,7 +189,7 @@ namespace live {
         this->validateGLfwRequiredInstanceExtensions();
     }
 
-    void LiveDevice::setupDebugMessenger(){
+    void EngineDevice::setupDebugMessenger(){
         if(!this->enableValidationLayers) return;
         VkDebugUtilsMessengerCreateInfoEXT createInfo;
         this->populateDebugMessengerCreateInfo(createInfo);
@@ -197,11 +197,11 @@ namespace live {
         if(!isSuccess) throw std::runtime_error("Failed to setup debugger messenger!");
     }
 
-    void LiveDevice::createSurface(){
+    void EngineDevice::createSurface(){
         window.createWindowSurface(this->instance, &this->surface_);
     }
 
-    void LiveDevice::pickPhysicalDevice(){
+    void EngineDevice::pickPhysicalDevice(){
         uint32_t deviceCount =0;
         vkEnumeratePhysicalDevices(this->instance, &deviceCount, nullptr);
         if(deviceCount ==0) throw std::runtime_error("Failed to find GPU with Vulkan support!");
@@ -220,7 +220,7 @@ namespace live {
         std::cout << "Physical Device -> "<< this->properties.deviceName << std::endl;
     }
 
-    void LiveDevice::createLogicalDevice(){
+    void EngineDevice::createLogicalDevice(){
         QueueFamilyIndices indices = this->findQueueFamilies(this->physicalDevice);
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
         std::set<uint32_t> uniqueFamilyIndices = {indices.graphicsFamily, indices.presentFamily};
@@ -245,14 +245,14 @@ namespace live {
         vkGetDeviceQueue(this->device_, indices.presentFamily, 0, &this->presentQueue_);
     }
 
-    void LiveDevice::createCommandPool(){
+    void EngineDevice::createCommandPool(){
         QueueFamilyIndices queueFamilyIndices = this->findPhysicalQueueFamilies();
         VkCommandPoolCreateInfo poolInfo = this->buildCommandPoolCreateInfo(queueFamilyIndices.graphicsFamily);
         bool isCreateCommandPoolSuccess = vkCreateCommandPool(this->device_, &poolInfo, nullptr, &this->commandPool) == VK_SUCCESS;
         if(!isCreateCommandPoolSuccess) throw std::runtime_error("Failed to create command pool!");
     }
 
-    VkSubmitInfo LiveDevice::buildSubmitInfo(uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffer){
+    VkSubmitInfo EngineDevice::buildSubmitInfo(uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffer){
         VkSubmitInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
         info.commandBufferCount = commandBufferCount;
@@ -260,13 +260,13 @@ namespace live {
         return info;
     }
 
-    VkCommandBufferBeginInfo LiveDevice::buildCommandBufferBeginInfo(){
+    VkCommandBufferBeginInfo EngineDevice::buildCommandBufferBeginInfo(){
         VkCommandBufferBeginInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO;
         info.flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT;
         return info;
     }
-    VkCommandBufferAllocateInfo LiveDevice::buildCommandBufferAllocateInfo(VkCommandPool commandPool, uint32_t commandBufferCount){
+    VkCommandBufferAllocateInfo EngineDevice::buildCommandBufferAllocateInfo(VkCommandPool commandPool, uint32_t commandBufferCount){
         VkCommandBufferAllocateInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO;
         info.level = VK_COMMAND_BUFFER_LEVEL_PRIMARY;
@@ -274,7 +274,7 @@ namespace live {
         info.commandBufferCount = commandBufferCount;
         return info;
     }
-    VkMemoryAllocateInfo LiveDevice::buildMemoryAllocateInfo(VkDeviceSize size, uint32_t memoryTypeIndex){
+    VkMemoryAllocateInfo EngineDevice::buildMemoryAllocateInfo(VkDeviceSize size, uint32_t memoryTypeIndex){
         VkMemoryAllocateInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO;
         info.allocationSize = size;
@@ -283,7 +283,7 @@ namespace live {
     }
 
 
-    VkBufferCreateInfo LiveDevice::buildBufferCreateInfo(VkDeviceSize size, VkBufferUsageFlags usage){
+    VkBufferCreateInfo EngineDevice::buildBufferCreateInfo(VkDeviceSize size, VkBufferUsageFlags usage){
         VkBufferCreateInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO;
         info.size = size;
@@ -292,7 +292,7 @@ namespace live {
         return info;
     }
 
-    VkCommandPoolCreateInfo LiveDevice::buildCommandPoolCreateInfo(uint32_t queueFamilyIndex){
+    VkCommandPoolCreateInfo EngineDevice::buildCommandPoolCreateInfo(uint32_t queueFamilyIndex){
         VkCommandPoolCreateInfo poolInfo = {};
         poolInfo.sType = VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO;
         poolInfo.queueFamilyIndex = queueFamilyIndex;
@@ -300,7 +300,7 @@ namespace live {
         return poolInfo;
     }
 
-    VkDeviceQueueCreateInfo LiveDevice::buildQueueCreateInfo(uint32_t queueFamilyIndex, float *queuePriority){
+    VkDeviceQueueCreateInfo EngineDevice::buildQueueCreateInfo(uint32_t queueFamilyIndex, float *queuePriority){
         VkDeviceQueueCreateInfo queueCreateInfo = {};
         queueCreateInfo.sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
         queueCreateInfo.queueFamilyIndex = queueFamilyIndex;
@@ -309,7 +309,7 @@ namespace live {
         return queueCreateInfo;
     }
 
-    VkApplicationInfo LiveDevice::buildApplicationInfo(){
+    VkApplicationInfo EngineDevice::buildApplicationInfo(){
         VkApplicationInfo info = {};
         info.sType = VK_STRUCTURE_TYPE_APPLICATION_INFO;
         info.pApplicationName = "GameEngine App";
@@ -320,13 +320,13 @@ namespace live {
         return info;
     }
 
-    VkPhysicalDeviceFeatures LiveDevice::buildDeviceFeatures(){
+    VkPhysicalDeviceFeatures EngineDevice::buildDeviceFeatures(){
         VkPhysicalDeviceFeatures deviceFeatures = {};
         deviceFeatures.samplerAnisotropy = VK_TRUE;
         return deviceFeatures;
     }
 
-    VkDeviceCreateInfo LiveDevice::buildBaseDeviceCreateInfo(uint32_t queueCreateInfoCount, const VkDeviceQueueCreateInfo *pQueueCreateInfos, const VkPhysicalDeviceFeatures *enabledFeatures, uint32_t enabledExtensionCount, const char *const *ppEnabledExtensionNames){
+    VkDeviceCreateInfo EngineDevice::buildBaseDeviceCreateInfo(uint32_t queueCreateInfoCount, const VkDeviceQueueCreateInfo *pQueueCreateInfos, const VkPhysicalDeviceFeatures *enabledFeatures, uint32_t enabledExtensionCount, const char *const *ppEnabledExtensionNames){
         VkDeviceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO;
         
@@ -339,7 +339,7 @@ namespace live {
         return createInfo;
     }
 
-    VkInstanceCreateInfo LiveDevice::buildInstanceCreateInfo(const VkApplicationInfo* appInfo){
+    VkInstanceCreateInfo EngineDevice::buildInstanceCreateInfo(const VkApplicationInfo* appInfo){
         VkInstanceCreateInfo createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO;
         createInfo.pApplicationInfo = appInfo;
@@ -347,7 +347,7 @@ namespace live {
         return createInfo;
     }
                                                 
-    bool LiveDevice::isDeviceSuitable(VkPhysicalDevice device){
+    bool EngineDevice::isDeviceSuitable(VkPhysicalDevice device){
         std::cout << "Attempting to check if device is suitable" << std::endl;
         QueueFamilyIndices indices = this->findQueueFamilies(device);
         bool isExtensionSupported = this->checkDeviceExtensionSupport(device);
@@ -367,7 +367,7 @@ namespace live {
         return isSuitable;
     }
 
-    QueueFamilyIndices LiveDevice::findQueueFamilies(VkPhysicalDevice device){
+    QueueFamilyIndices EngineDevice::findQueueFamilies(VkPhysicalDevice device){
         QueueFamilyIndices indices;
         uint32_t queueFamilyCount = 0;
         
@@ -397,7 +397,7 @@ namespace live {
     }
 
 
-    bool LiveDevice::checkDeviceExtensionSupport(VkPhysicalDevice device){
+    bool EngineDevice::checkDeviceExtensionSupport(VkPhysicalDevice device){
         uint32_t extensionCount = 0;
         vkEnumerateDeviceExtensionProperties(device, nullptr, &extensionCount, nullptr);
         
@@ -410,7 +410,7 @@ namespace live {
         return requiredExtension.empty();
     }
 
-    SwapChainSupportDetails LiveDevice::querySwapChainSupport(VkPhysicalDevice device){
+    SwapChainSupportDetails EngineDevice::querySwapChainSupport(VkPhysicalDevice device){
         SwapChainSupportDetails details;
         vkGetPhysicalDeviceSurfaceCapabilitiesKHR(device, this->surface_, &details.capabilities);
         
@@ -433,7 +433,7 @@ namespace live {
         return details;
     }
 
-    void LiveDevice::validateGLfwRequiredInstanceExtensions(){
+    void EngineDevice::validateGLfwRequiredInstanceExtensions(){
         uint32_t count =0;
         vkEnumerateInstanceExtensionProperties(nullptr, &count, nullptr);
         std::vector<VkExtensionProperties> extensions(count);
@@ -456,7 +456,7 @@ namespace live {
         }
     }
 
-    void LiveDevice::populateDebugMessengerCreateInfo(
+    void EngineDevice::populateDebugMessengerCreateInfo(
         VkDebugUtilsMessengerCreateInfoEXT &createInfo) {
         createInfo = {};
         createInfo.sType = VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT;
@@ -469,7 +469,7 @@ namespace live {
         createInfo.pUserData = nullptr;  // Optional
     }
 
-    std::vector<const char *> LiveDevice::getRequiredExtensions(){
+    std::vector<const char *> EngineDevice::getRequiredExtensions(){
         uint32_t glfwExtensionsCount = 0;
         const char** glfwExtensions;
         glfwExtensions = glfwGetRequiredInstanceExtensions(&glfwExtensionsCount);
@@ -483,7 +483,7 @@ namespace live {
         return extensions;
     }
 
-    bool LiveDevice::checkValidationLayerSupport(){
+    bool EngineDevice::checkValidationLayerSupport(){
         uint32_t layerCount = 0;
         vkEnumerateInstanceLayerProperties(&layerCount, nullptr);
         std::vector<VkLayerProperties> availableLayers(layerCount);

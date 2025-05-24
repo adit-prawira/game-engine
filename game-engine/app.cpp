@@ -1,8 +1,8 @@
 #include "app.hpp"
 
-namespace live {
+namespace engine {
     void App::run(){
-        while (!liveWindow.shouldClose()){
+        while (!engineWindow.shouldClose()){
             glfwPollEvents();
         }
     }

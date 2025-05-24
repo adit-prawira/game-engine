@@ -6,7 +6,7 @@
 #include <stdexcept>
 
 int main(){
-    live::App app{};
+    engine::App app{};
     try {
         app.run();
     }catch(const std::exception &e){

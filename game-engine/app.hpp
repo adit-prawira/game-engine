@@ -1,8 +1,8 @@
 #pragma once
-#include "live_window.hpp"
-#include "live_pipeline.hpp"
-#include "live_device.hpp"
-namespace live {
+#include "engine_window.hpp"
+#include "engine_pipeline.hpp"
+#include "engine_device.hpp"
+namespace engine {
 
     class App {
         public:
@@ -12,9 +12,9 @@ namespace live {
             void run();
             
         private:
-            LiveWindow liveWindow{WIDTH, HEIGHT, "Application Vulkan!"};
-            LiveDevice liveDevice{liveWindow};
+            EngineWindow engineWindow{WIDTH, HEIGHT, "Application Vulkan!"};
+            EngineDevice engineDevice{engineWindow};
             // read compiled shader vertext and fragment file code
-            LivePipeline livePipeline{liveDevice, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv", LivePipeline::defaultPipelineConfig(WIDTH, HEIGHT)};
+            EnginePipeline enginePipeline{engineDevice, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv", EnginePipeline::defaultPipelineConfig(WIDTH, HEIGHT)};
     };
 }
