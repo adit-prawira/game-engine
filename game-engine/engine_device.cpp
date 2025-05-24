@@ -27,12 +27,14 @@ namespace engine {
 
     // Publics
     EngineDevice::EngineDevice(EngineWindow &window): window{window}{
+        std::cout << "EngineDevice: Initialising engine device" << std::endl;
         this->createInstance();
         this->setupDebugMessenger();
         this->createSurface();
         this->pickPhysicalDevice();
         this->createLogicalDevice();
         this->createCommandPool();
+        std::cout << "EngineDevice: Successfully initialise engine device" << std::endl;
     }
 
     EngineDevice::~EngineDevice(){
@@ -160,6 +162,8 @@ namespace engine {
 
     // Privates
     void EngineDevice::createInstance(){
+        std::cout << "\t -> createInstance(): Creating instance" << std::endl;
+
         if(this->enableValidationLayers && !this->checkValidationLayerSupport()) throw std::runtime_error("Validation layers requested, but not available");
 
         VkApplicationInfo appInfo = this->buildApplicationInfo();
@@ -185,27 +189,34 @@ namespace engine {
         bool isCreateInstanceSuccess = vkCreateInstance(&createInfo, nullptr, &this->instance) == VK_SUCCESS;
 
         if(!isCreateInstanceSuccess) throw std::runtime_error("Failed to create instance");
-        std::cout << "Creating instance successful" << std::endl;
         this->validateGLfwRequiredInstanceExtensions();
+        std::cout << "\t -> createInstance(): Successfully create instance" << std::endl;
     }
 
     void EngineDevice::setupDebugMessenger(){
+        std::cout << "\t -> setupDebugMessenger(): Setting up debug messenger" << std::endl;
+
         if(!this->enableValidationLayers) return;
         VkDebugUtilsMessengerCreateInfoEXT createInfo;
         this->populateDebugMessengerCreateInfo(createInfo);
         bool isSuccess = CreateDebugUtilsMessengerEXT(this->instance, &createInfo, nullptr, &this->debugMessenger) == VK_SUCCESS;
         if(!isSuccess) throw std::runtime_error("Failed to setup debugger messenger!");
+
+        std::cout << "\t -> setupDebugMessenger(): Successfully set up debug messenger" << std::endl;
     }
 
     void EngineDevice::createSurface(){
+        std::cout << "\t -> createSurface(): Creating surface" << std::endl;
         window.createWindowSurface(this->instance, &this->surface_);
+        std::cout << "\t -> createSurface(): Successfully create surface" << std::endl;
     }
 
     void EngineDevice::pickPhysicalDevice(){
+        std::cout << "\t -> pickPhysicalDevice(): Picking physical device" << std::endl;
         uint32_t deviceCount =0;
         vkEnumeratePhysicalDevices(this->instance, &deviceCount, nullptr);
         if(deviceCount ==0) throw std::runtime_error("Failed to find GPU with Vulkan support!");
-        std::cout << "Total GPU devices available -> " << deviceCount << std::endl;
+        std::cout << "\t\t -> Total GPU devices available -> " << deviceCount << std::endl;
         std::vector<VkPhysicalDevice> devices(deviceCount);
         vkEnumeratePhysicalDevices(this->instance, &deviceCount, devices.data());
         
@@ -217,10 +228,11 @@ namespace engine {
         }
         if(this->physicalDevice==VK_NULL_HANDLE) throw std::runtime_error("Failed to find suitable GPU");
         vkGetPhysicalDeviceProperties(this->physicalDevice, &this->properties);
-        std::cout << "Physical Device -> "<< this->properties.deviceName << std::endl;
+        std::cout << "\t -> pickPhysicalDevice(): Successfully pick physical device => " << this->properties.deviceName << std::endl;
     }
 
     void EngineDevice::createLogicalDevice(){
+        std::cout << "\t -> createLogicalDevice(): Creating logical device" << std::endl;
         QueueFamilyIndices indices = this->findQueueFamilies(this->physicalDevice);
         std::vector<VkDeviceQueueCreateInfo> queueCreateInfos;
         std::set<uint32_t> uniqueFamilyIndices = {indices.graphicsFamily, indices.presentFamily};
@@ -243,13 +255,17 @@ namespace engine {
         
         vkGetDeviceQueue(this->device_, indices.graphicsFamily, 0, &this->graphicsQueue_);
         vkGetDeviceQueue(this->device_, indices.presentFamily, 0, &this->presentQueue_);
+        std::cout << "\t -> createLogicalDevice(): Successfully create logical device" << std::endl;
     }
 
     void EngineDevice::createCommandPool(){
+        std::cout << "\t -> createCommandPool(): Creating command pool" << std::endl;
+
         QueueFamilyIndices queueFamilyIndices = this->findPhysicalQueueFamilies();
         VkCommandPoolCreateInfo poolInfo = this->buildCommandPoolCreateInfo(queueFamilyIndices.graphicsFamily);
         bool isCreateCommandPoolSuccess = vkCreateCommandPool(this->device_, &poolInfo, nullptr, &this->commandPool) == VK_SUCCESS;
         if(!isCreateCommandPoolSuccess) throw std::runtime_error("Failed to create command pool!");
+        std::cout << "\t -> createCommandPool(): Successfully create command pool" << std::endl;
     }
 
     VkSubmitInfo EngineDevice::buildSubmitInfo(uint32_t commandBufferCount, const VkCommandBuffer* pCommandBuffer){
@@ -348,7 +364,7 @@ namespace engine {
     }
                                                 
     bool EngineDevice::isDeviceSuitable(VkPhysicalDevice device){
-        std::cout << "Attempting to check if device is suitable" << std::endl;
+        std::cout << "\t\t -> Attempting to check if device is suitable" << std::endl;
         QueueFamilyIndices indices = this->findQueueFamilies(device);
         bool isExtensionSupported = this->checkDeviceExtensionSupport(device);
         bool isSwapChainAdequate = false;
@@ -358,12 +374,12 @@ namespace engine {
         }
         VkPhysicalDeviceFeatures supportedFeatures;
         vkGetPhysicalDeviceFeatures(device, &supportedFeatures);
-        std::cout << "\tIndices Completed -> " << indices.isComplete() << std::endl;
-        std::cout << "\tExtension is supported -> " << isExtensionSupported << std::endl;
-        std::cout << "\tSwap chain is adequate -> " << isSwapChainAdequate << std::endl;
-        std::cout << "\tSampler Anisotropy -> " << supportedFeatures.samplerAnisotropy << std::endl;
+        std::cout << "\t\t -> Indices Completed -> " << indices.isComplete() << std::endl;
+        std::cout << "\t\t -> Extension is supported -> " << isExtensionSupported << std::endl;
+        std::cout << "\t\t -> Swap chain is adequate -> " << isSwapChainAdequate << std::endl;
+        std::cout << "\t\t -> Sampler Anisotropy -> " << supportedFeatures.samplerAnisotropy << std::endl;
         bool isSuitable = indices.isComplete() && isExtensionSupported && isSwapChainAdequate && supportedFeatures.samplerAnisotropy;
-        std::cout << "Is Device Suitable -> " << isSuitable << std::endl;
+        std::cout << "\t\t -> Is Device Suitable -> " << isSuitable << std::endl;
         return isSuitable;
     }
 
@@ -440,17 +456,17 @@ namespace engine {
         vkEnumerateInstanceExtensionProperties(nullptr, &count, extensions.data());
         std::unordered_set<std::string> availableExtensions;
         
-        std::cout << "Available extensions:" << std::endl;
+        std::cout << "\t\tAvailable extensions:" << std::endl;
         for(const auto &extension: extensions){
-            std::cout << "\t->" << extension.extensionName << std::endl;
+            std::cout << "\t\t\t-> " << extension.extensionName << std::endl;
             availableExtensions.insert(extension.extensionName);
         }
         
         std::vector<const char *> requiredExtensions = this->getRequiredExtensions();
         
-        std::cout << "Required extensions:" << std::endl;
+        std::cout << "\t\tRequired extensions:" << std::endl;
         for(const auto &requiredExtension:requiredExtensions){
-            std::cout << "\t->"<< requiredExtension << std::endl;
+            std::cout << "\t\t\t-> "<< requiredExtension << std::endl;
             bool isRequiredExtensionFound = availableExtensions.find(requiredExtension) != availableExtensions.end();
             if(!isRequiredExtensionFound) throw std::runtime_error("Missing required GLFW extension");
         }

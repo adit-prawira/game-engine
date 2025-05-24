@@ -22,7 +22,7 @@ namespace engine {
     PipelineConfigInfo EnginePipeline::defaultPipelineConfig(uint32_t width, uint32_t height){
         PipelineConfigInfo pipelineConfigInfo = {};
         pipelineConfigInfo.pipelineInputAssemblyStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO;
-        pipelineConfigInfo.pipelineInputAssemblyStateCreateInfo.flags = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+        pipelineConfigInfo.pipelineInputAssemblyStateCreateInfo.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
         pipelineConfigInfo.pipelineInputAssemblyStateCreateInfo.primitiveRestartEnable = VK_FALSE;
 
         // View ports
@@ -37,12 +37,6 @@ namespace engine {
 
         pipelineConfigInfo.scissor.offset = {0,0};
         pipelineConfigInfo.scissor.extent = {width, height};
-
-        pipelineConfigInfo.pipelineViewPortStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
-        pipelineConfigInfo.pipelineViewPortStateCreateInfo.viewportCount = 1;
-        pipelineConfigInfo.pipelineViewPortStateCreateInfo.pViewports = &pipelineConfigInfo.viewPort;
-        pipelineConfigInfo.pipelineViewPortStateCreateInfo.scissorCount = 1;
-        pipelineConfigInfo.pipelineViewPortStateCreateInfo.pScissors = &pipelineConfigInfo.scissor;
 
         // Rasterization
         pipelineConfigInfo.pipelineRasterizationStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO;
@@ -87,20 +81,32 @@ namespace engine {
         pipelineConfigInfo.pipelineColorBlendStateCreateInfo.blendConstants[2] = 0.0f; // Optional
         pipelineConfigInfo.pipelineColorBlendStateCreateInfo.blendConstants[3] = 0.0f; // Optional
 
+
+        pipelineConfigInfo.pipelineDepthStencilStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO;
+        pipelineConfigInfo.pipelineDepthStencilStateCreateInfo.depthTestEnable = VK_TRUE;
+        pipelineConfigInfo.pipelineDepthStencilStateCreateInfo.depthWriteEnable = VK_TRUE;
+        pipelineConfigInfo.pipelineDepthStencilStateCreateInfo.depthCompareOp = VK_COMPARE_OP_LESS;
+        pipelineConfigInfo.pipelineDepthStencilStateCreateInfo.depthBoundsTestEnable = VK_FALSE;
+        pipelineConfigInfo.pipelineDepthStencilStateCreateInfo.minDepthBounds = 0.0f; // Optional
+        pipelineConfigInfo.pipelineDepthStencilStateCreateInfo.maxDepthBounds = 1.0f; // Optional
+        pipelineConfigInfo.pipelineDepthStencilStateCreateInfo.stencilTestEnable = VK_FALSE;
+        pipelineConfigInfo.pipelineDepthStencilStateCreateInfo.front = {}; // Optional
+        pipelineConfigInfo.pipelineDepthStencilStateCreateInfo.back = {}; // Optional 
         
         return pipelineConfigInfo;
     }
 
-    // Privates
+    void EnginePipeline::bind(VkCommandBuffer commandBuffer){
+        vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->graphicsPipeline);
+    }
+    // Privates    
     std::vector<char> EnginePipeline::readFile(const std::string& filePath){
         
         // read file, and when open seeked the end immediately and read it as binary
         
         std::filesystem::path currentPath = std::filesystem::current_path();
         std::ifstream file(filePath, std::ios::ate | std::ios::binary);
-        std::cout << "Current relative path: " << currentPath.string() << "\n";
-        
-        std::cout << "Is file opened: " << file.good() << "\n";
+
         if(!file.is_open()) throw std::runtime_error("Failed to open file: " + filePath);
         
         size_t fileSize = static_cast<size_t>(file.tellg());
@@ -154,13 +160,21 @@ namespace engine {
         pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = nullptr;
         pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = nullptr;
 
+        VkPipelineViewportStateCreateInfo pipelineViewPortStateCreateInfo = {};
+
+        pipelineViewPortStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
+        pipelineViewPortStateCreateInfo.viewportCount = 1;
+        pipelineViewPortStateCreateInfo.pViewports = &configInfo.viewPort;
+        pipelineViewPortStateCreateInfo.scissorCount = 1;
+        pipelineViewPortStateCreateInfo.pScissors = &configInfo.scissor;
+
         VkGraphicsPipelineCreateInfo graphicsPipelineCreateInfo = {};
         graphicsPipelineCreateInfo.sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO;
         graphicsPipelineCreateInfo.stageCount = 2;
         graphicsPipelineCreateInfo.pStages = shaderStages;
         graphicsPipelineCreateInfo.pVertexInputState = &pipelineVertexInputStateCreateInfo;
         graphicsPipelineCreateInfo.pInputAssemblyState = &configInfo.pipelineInputAssemblyStateCreateInfo;
-        graphicsPipelineCreateInfo.pViewportState = &configInfo.pipelineViewPortStateCreateInfo;
+        graphicsPipelineCreateInfo.pViewportState = &pipelineViewPortStateCreateInfo;
         graphicsPipelineCreateInfo.pRasterizationState = &configInfo.pipelineRasterizationStateCreateInfo;
         graphicsPipelineCreateInfo.pMultisampleState = &configInfo.pipelineMultiSampleStateCreateInfo;
         graphicsPipelineCreateInfo.pColorBlendState = &configInfo.pipelineColorBlendStateCreateInfo;

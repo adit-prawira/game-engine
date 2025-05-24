@@ -9,7 +9,6 @@ namespace engine {
     struct PipelineConfigInfo {
         VkViewport viewPort;
         VkRect2D scissor;
-        VkPipelineViewportStateCreateInfo pipelineViewPortStateCreateInfo;
         VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo;
         VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo;
         VkPipelineMultisampleStateCreateInfo pipelineMultiSampleStateCreateInfo;
@@ -29,6 +28,9 @@ namespace engine {
             EnginePipeline(const EnginePipeline&) = delete;
             void operator = (const EnginePipeline&) = delete; 
             static PipelineConfigInfo defaultPipelineConfig(uint32_t width, uint32_t height);
+
+            void bind(VkCommandBuffer commandBuffer);
+            
         private:
             static std::vector<char> readFile(const std::string& filePath);
             

@@ -2,6 +2,12 @@
 #include "engine_window.hpp"
 #include "engine_pipeline.hpp"
 #include "engine_device.hpp"
+#include "engine_swap_chain.hpp"
+
+// std
+#include <memory>
+#include <vector>
+
 namespace engine {
 
     class App {
@@ -9,12 +15,28 @@ namespace engine {
             static constexpr int WIDTH = 800;
             static constexpr int HEIGHT = 600;
             
-            void run();
+            App();
+            ~App();
             
+            App(const App &) = delete;
+            App &operator=(const App &)=delete;
+
+            void run();
+
+
         private:
             EngineWindow engineWindow{WIDTH, HEIGHT, "Application Vulkan!"};
             EngineDevice engineDevice{engineWindow};
-            // read compiled shader vertext and fragment file code
-            EnginePipeline enginePipeline{engineDevice, "shaders/simple_shader.vert.spv", "shaders/simple_shader.frag.spv", EnginePipeline::defaultPipelineConfig(WIDTH, HEIGHT)};
+            EngineSwapChain engineSwapChain{engineDevice, this->engineWindow.getExtent()};
+
+            std::unique_ptr<EnginePipeline> enginePipeline;
+            VkPipelineLayout pipelineLayout;
+            std::vector<VkCommandBuffer> commandBuffers;
+
+            void createPipelineLayout();
+            void createPipeline();
+            void createCommandBuffers();
+            void drawFrame();
+
     };
 }
