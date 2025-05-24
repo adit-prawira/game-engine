@@ -6,12 +6,26 @@
 #include <vector>
 
 namespace live {
-    struct PipelineConfigInfo {};
+    struct PipelineConfigInfo {
+        VkViewport viewPort;
+        VkRect2D scissor;
+        VkPipelineViewportStateCreateInfo pipelineViewPortStateCreateInfo;
+        VkPipelineInputAssemblyStateCreateInfo pipelineInputAssemblyStateCreateInfo;
+        VkPipelineRasterizationStateCreateInfo pipelineRasterizationStateCreateInfo;
+        VkPipelineMultisampleStateCreateInfo pipelineMultiSampleStateCreateInfo;
+        VkPipelineColorBlendAttachmentState pipelineColorBlendAttachmentState;
+        VkPipelineColorBlendStateCreateInfo pipelineColorBlendStateCreateInfo;
+        VkPipelineDepthStencilStateCreateInfo pipelineDepthStencilStateCreateInfo;
+        VkPipelineLayout pipelineLayout = nullptr;
+        VkRenderPass renderPass = nullptr;
+        uint32_t subpass = 0;
+    };
+
     class LivePipeline {
         public:
             LivePipeline(LiveDevice &device,  const std::string& vertexFilePath, const std::string& fragmentFilePath, const PipelineConfigInfo& configInfo);
-            ~LivePipeline(){};
-
+            ~LivePipeline();
+            
             LivePipeline(const LivePipeline&) = delete;
             void operator = (const LivePipeline&) = delete; 
             static PipelineConfigInfo defaultPipelineConfig(uint32_t width, uint32_t height);
