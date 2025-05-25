@@ -59,7 +59,7 @@ namespace engine {
       // Builders
       VkSwapchainCreateInfoKHR buildSwapchainCreateInfo(uint32_t minImageCount, VkFormat imageFormat, VkColorSpaceKHR imageColorSpace, VkExtent2D extent);
       VkImageViewCreateInfo buildImageViewCreateInfo(VkImage image, VkFormat format, VkImageAspectFlags aspectMask);
-      VkSubmitInfo buildSubmitInfo(VkSemaphore* pWaitSemaphores, VkPipelineStageFlags* pWaitDestStageMask, VkSemaphore* pSignalSemaphores);
+      VkSubmitInfo buildSubmitInfo(const VkSemaphore* pWaitSemaphores, const VkPipelineStageFlags* pWaitDestStageMask, const VkCommandBuffer* commandBuffers,  const VkSemaphore* pSignalSemaphores);
       VkPresentInfoKHR buildPresentInfoKHR(const VkSemaphore* pWaitSemaphores, const VkSwapchainKHR* pSwapChains, const uint32_t* pImageIndices);
       VkImageCreateInfo buildImageCreateInfo(VkFormat format);
       VkFramebufferCreateInfo buildFrameBufferCreateInfo(VkRenderPass renderPass, uint32_t attachmentCount, const VkImageView* pAttachments, uint32_t width, uint32_t height);

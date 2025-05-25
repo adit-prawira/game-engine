@@ -3,6 +3,7 @@
 // std
 #include <iostream>
 #include <array>
+#include <iostream>
 
 namespace engine {
   // Publics
@@ -82,7 +83,7 @@ namespace engine {
       VkSemaphore waitSemaphores[] = {this->imageAvailableSemaphores[this->currentFrame]};
       VkPipelineStageFlags waitStages[] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
       VkSemaphore signalSemaphores[] = {this->renderedImageSemaphores[this->currentFrame]};
-      VkSubmitInfo submitInfo = this->buildSubmitInfo(waitSemaphores, waitStages, signalSemaphores);
+      VkSubmitInfo submitInfo = this->buildSubmitInfo(waitSemaphores, waitStages, buffers, signalSemaphores);
       vkResetFences(this->device.device(), 1, &this->inFlightFences[this->currentFrame]);
       bool isSubmitQueueSuccess = vkQueueSubmit(this->device.graphicsQueue(), 1, &submitInfo, this->inFlightFences[this->currentFrame]) == VK_SUCCESS;
       if(!isSubmitQueueSuccess) throw std::runtime_error("Failed to submit draw command buffer to job!");
@@ -321,12 +322,17 @@ namespace engine {
     return info;
   }
 
-  VkSubmitInfo EngineSwapChain::buildSubmitInfo(VkSemaphore* pWaitSemaphores, VkPipelineStageFlags* pWaitDestStageMask, VkSemaphore* pSignalSemaphores){
+  VkSubmitInfo EngineSwapChain::buildSubmitInfo(const VkSemaphore* pWaitSemaphores, const VkPipelineStageFlags* pWaitDestStageMask, const VkCommandBuffer* commandBuffers,  const VkSemaphore* pSignalSemaphores){
     VkSubmitInfo info = {};
     info.sType = VK_STRUCTURE_TYPE_SUBMIT_INFO;
+    
     info.waitSemaphoreCount = 1;
     info.pWaitSemaphores = pWaitSemaphores;
     info.pWaitDstStageMask = pWaitDestStageMask;
+
+    info.commandBufferCount = 1;
+    info.pCommandBuffers = commandBuffers;
+
     info.signalSemaphoreCount = 1;
     info.pSignalSemaphores = pSignalSemaphores;
     return info;
@@ -379,7 +385,6 @@ namespace engine {
     info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
     return info;
   }
-
 
   VkSurfaceFormatKHR EngineSwapChain::chooseSwapSurfaceFormat(const std::vector<VkSurfaceFormatKHR> &availableFormats){
     for(const auto &availableFormat:availableFormats){
