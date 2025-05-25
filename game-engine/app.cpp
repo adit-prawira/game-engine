@@ -4,6 +4,7 @@
 // std
 #include <stdexcept>
 #include <array>
+#include <iostream>
 
 namespace engine {
     // Publics
@@ -100,7 +101,7 @@ namespace engine {
 
     }
 
-    void App::drawFrame(){
+    void App::drawFrame(){        
         uint32_t imageIndex;
         auto result = this->engineSwapChain.acquireNextImage(&imageIndex);
 
