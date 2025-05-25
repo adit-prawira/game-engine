@@ -1,4 +1,5 @@
 #include "engine_pipeline.hpp"
+#include "engine_model.hpp"
 
 // std
 #include <fstream>
@@ -99,6 +100,7 @@ namespace engine {
     void EnginePipeline::bind(VkCommandBuffer commandBuffer){
         vkCmdBindPipeline(commandBuffer, VK_PIPELINE_BIND_POINT_GRAPHICS, this->graphicsPipeline);
     }
+    
     // Privates    
     std::vector<char> EnginePipeline::readFile(const std::string& filePath){
         
@@ -153,15 +155,17 @@ namespace engine {
         shaderStages[1].pNext = nullptr;
         shaderStages[1].pSpecializationInfo = nullptr;
 
+        auto bindingDescriptions = EngineModel::Vertex::getBindingDescriptions();
+        auto attributeDescriptions = EngineModel::Vertex::getAttributeDescriptions();
+
         VkPipelineVertexInputStateCreateInfo pipelineVertexInputStateCreateInfo = {};
         pipelineVertexInputStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO;
-        pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = 0;
-        pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = 0;
-        pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = nullptr;
-        pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = nullptr;
+        pipelineVertexInputStateCreateInfo.vertexAttributeDescriptionCount = static_cast<uint32_t>(attributeDescriptions.size());
+        pipelineVertexInputStateCreateInfo.pVertexAttributeDescriptions = attributeDescriptions.data();
+        pipelineVertexInputStateCreateInfo.vertexBindingDescriptionCount = static_cast<uint32_t>(bindingDescriptions.size());
+        pipelineVertexInputStateCreateInfo.pVertexBindingDescriptions = bindingDescriptions.data();
 
         VkPipelineViewportStateCreateInfo pipelineViewPortStateCreateInfo = {};
-
         pipelineViewPortStateCreateInfo.sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO;
         pipelineViewPortStateCreateInfo.viewportCount = 1;
         pipelineViewPortStateCreateInfo.pViewports = &configInfo.viewPort;

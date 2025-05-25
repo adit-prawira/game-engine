@@ -8,14 +8,8 @@
 
 namespace engine {
     // Publics
-    void App::run(){
-        while (!engineWindow.shouldClose()){
-            glfwPollEvents();
-            this->drawFrame();
-        }
-        vkDeviceWaitIdle(this->engineDevice.device());
-    }
     App::App(){
+        this->loadModels();
         this->createPipelineLayout();
         this->createPipeline();
         this->createCommandBuffers();
@@ -24,6 +18,14 @@ namespace engine {
     App::~App(){
         vkDestroyPipelineLayout(this->engineDevice.device(), this->pipelineLayout, nullptr);
 
+    }
+    
+    void App::run(){
+        while (!engineWindow.shouldClose()){
+            glfwPollEvents();
+            this->drawFrame();
+        }
+        vkDeviceWaitIdle(this->engineDevice.device());
     }
     
 
@@ -92,7 +94,8 @@ namespace engine {
             vkCmdBeginRenderPass(this->commandBuffers[i], &renderPassBeginInfo, VK_SUBPASS_CONTENTS_INLINE);
 
             this->enginePipeline->bind(this->commandBuffers[i]);
-            vkCmdDraw(this->commandBuffers[i], 3, 1, 0, 0);
+            this->engineModel->bind(this->commandBuffers[i]);
+            this->engineModel->draw(this->commandBuffers[i]);
 
             vkCmdEndRenderPass(this->commandBuffers[i]);
             bool isEndCommandBufferSuccess = vkEndCommandBuffer(this->commandBuffers[i]) == VK_SUCCESS;
@@ -113,5 +116,17 @@ namespace engine {
         result = this->engineSwapChain.submitCommandBuffers(&this->commandBuffers[imageIndex], &imageIndex);
         bool isSubmitSuccess = result == VK_SUCCESS;
         if(!isSubmitSuccess) throw std::runtime_error("Failed to submit command buffer to device graphics queue");
+    }
+
+    void App::loadModels(){
+        std::vector<EngineModel::Vertex> vertices = {
+            {{0.0f, -0.5f}},
+            {{0.5f, 0.5f}},
+            {{-0.5f, 0.5f}}
+        };
+        this->engineModel = std::make_unique<EngineModel>(
+            this->engineDevice,
+            vertices
+        );
     }
 }
