@@ -42,5 +42,12 @@ namespace engine {
             void drawFrame();
             void loadModels();
 
+            void sierpinski(
+                std::vector<EngineModel::Vertex> &vertices, 
+                uint32_t depth, 
+                std::pair<glm::vec2, glm::vec3> left,
+                std::pair<glm::vec2, glm::vec3>  top, 
+                std::pair<glm::vec2, glm::vec3>  right);
+
     };
 }

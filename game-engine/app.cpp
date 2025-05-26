@@ -119,14 +119,43 @@ namespace engine {
     }
 
     void App::loadModels(){
-        std::vector<EngineModel::Vertex> vertices = {
-            {{0.0f, -0.5f}},
-            {{0.5f, 0.5f}},
-            {{-0.5f, 0.5f}}
-        };
+        std::vector<EngineModel::Vertex> vertices{};
+        this->sierpinski(vertices, 1, 
+            {{-0.5f, 0.5f}, {0.0f, 0.0f,1.0f}}, 
+            {{0.0f, -0.5f}, {1.0f, 0.0f,0.0f}},
+            {{0.5f, 0.5f}, {0.0f, 1.0f,0.0f}}
+        );
         this->engineModel = std::make_unique<EngineModel>(
             this->engineDevice,
             vertices
         );
+    }
+
+    
+    void App::sierpinski(
+        std::vector<EngineModel::Vertex> &vertices, 
+        uint32_t depth, 
+        std::pair<glm::vec2, glm::vec3> left,
+        std::pair<glm::vec2, glm::vec3>  top, 
+        std::pair<glm::vec2, glm::vec3>  right
+    ){
+        if(depth <= 0 ){
+            vertices.push_back({top.first, top.second});
+            vertices.push_back({right.first, right.second});
+            vertices.push_back({left.first, left.second});
+            return;
+        }
+        glm::vec2 leftTopMidVector = (left.first + top.first) / 2.0f;
+        glm::vec2 topRightMidVector = (top.first + right.first) / 2.0f;
+        glm::vec2 rightLeftMidVector = (right.first + left.first) /2.0f;
+
+        // bottom left triangle
+        this->sierpinski(vertices, depth-1, left, {leftTopMidVector, top.second}, {rightLeftMidVector, right.second});
+
+        // top triangle
+        this->sierpinski(vertices, depth-1, {leftTopMidVector, left.second}, top, {topRightMidVector, right.second});
+
+        // bottom right triangle
+        this->sierpinski(vertices, depth-1, {rightLeftMidVector, left.second}, {topRightMidVector, top.second}, right);
     }
 }
